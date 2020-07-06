@@ -224,21 +224,6 @@ library TellorDispute {
     }
 
     /**
-    * @dev Updates the Tellor address after a proposed fork has 
-    * passed the vote and day has gone by without a dispute
-    * @param _disputeId the disputeId for the proposed fork
-    */
-    function updateTellor(TellorStorage.TellorStorageStruct storage self, uint _disputeId) internal {
-        bytes32 _hash = self.disputesById[_disputeId].hash;
-        uint256 origID = self.disputeIdByDisputeHash[_hash];
-        uint256 lastID =  self.disputesById[origID].disputeUintVars[keccak256(abi.encodePacked(self.disputesById[origID].disputeUintVars[keccak256("disputeRounds")]))];
-        TellorStorage.Dispute storage disp = self.disputesById[lastID];
-        require(disp.disputeVotePassed == true, "vote needs to pass");
-        require(now - disp.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting for further disputes has not passed");
-        self.addressVars[keccak256("tellorContract")] = disp.proposedForkAddress;
-    }
-
-    /**
     * @dev Allows disputer to unlock the dispute fee
     * @param _disputeId to unlock fee from
     */
@@ -251,54 +236,61 @@ library TellorDispute {
         }
         TellorStorage.Dispute storage disp = self.disputesById[origID];
         TellorStorage.Dispute storage last = self.disputesById[lastID];
-                if(disp.disputeUintVars[keccak256("disputeRounds")] == 0){
-                  disp.disputeUintVars[keccak256("disputeRounds")] = 1;  
-                }
-        require(disp.disputeUintVars[keccak256("paid")] == 0,"already paid out");
-        require(now - last.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting haven't elapsed");
-        TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
-        disp.disputeUintVars[keccak256("paid")] = 1;
-        if (last.disputeVotePassed == true){
-                //Changing the currentStatus and startDate unstakes the reported miner and transfers the stakeAmount
-                stakes.startDate = now - (now % 86400);
-
-                //Reduce the staker count
-                self.uintVars[keccak256("stakerCount")] -= 1;
-
-                //Update the minimum dispute fee that is based on the number of stakers 
-                updateMinDisputeFee(self);
-                //Decreases the stakerCount since the miner's stake is being slashed
-                if(stakes.currentStatus == 4){
-                    TellorTransfer.doTransfer(self,disp.reportedMiner,disp.reportingParty,self.uintVars[keccak256("stakeAmount")]);
-                    stakes.currentStatus =0 ;
-                }
-                for(uint i = 0; i < disp.disputeUintVars[keccak256("disputeRounds")];i++){
-                    uint256 _id = disp.disputeUintVars[keccak256(abi.encodePacked(disp.disputeUintVars[keccak256("disputeRounds")]-i))];
-                    if(_id == 0){
-                        _id = origID;
+        if(last.isPropFork){
+                require(last.disputeVotePassed == true, "vote needs to pass");
+                require(now - last.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting for further disputes has not passed");
+                self.addressVars[keccak256("tellorContract")] = last.proposedForkAddress;
+        }
+        else{
+            if(disp.disputeUintVars[keccak256("disputeRounds")] == 0){
+                      disp.disputeUintVars[keccak256("disputeRounds")] = 1;  
                     }
-                    TellorStorage.Dispute storage disp2 = self.disputesById[_id];
-                    TellorTransfer.doTransfer(self,address(this),disp2.reportingParty,disp2.disputeUintVars[keccak256("fee")]);
-                }
-            }
-            else {
-                stakes.currentStatus = 1;
-                TellorStorage.Request storage _request = self.requestDetails[disp.disputeUintVars[keccak256("requestId")]];
-                if(disp.disputeUintVars[keccak256("minerSlot")] == 2) {
-                    //note we still don't put timestamp back into array (is this an issue? (shouldn't be))
-                  _request.finalValues[disp.disputeUintVars[keccak256("timestamp")]] = disp.disputeUintVars[keccak256("value")];
-                }
-                if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
-                    _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
-                }
-                for(uint i = 0; i < disp.disputeUintVars[keccak256("disputeRounds")];i++){
-                    uint256 _id = disp.disputeUintVars[keccak256(abi.encodePacked(disp.disputeUintVars[keccak256("disputeRounds")]-i))];
-                    if(_id != 0){
-                        last = self.disputesById[_id];//handling if happens during an upgrade
+            require(disp.disputeUintVars[keccak256("paid")] == 0,"already paid out");
+            require(now - last.disputeUintVars[keccak256("tallyDate")] > 1 days, "Time for voting haven't elapsed");
+            TellorStorage.StakeInfo storage stakes = self.stakerDetails[disp.reportedMiner];
+            disp.disputeUintVars[keccak256("paid")] = 1;
+            if (last.disputeVotePassed == true){
+                    //Changing the currentStatus and startDate unstakes the reported miner and transfers the stakeAmount
+                    stakes.startDate = now - (now % 86400);
+
+                    //Reduce the staker count
+                    self.uintVars[keccak256("stakerCount")] -= 1;
+
+                    //Update the minimum dispute fee that is based on the number of stakers 
+                    updateMinDisputeFee(self);
+                    //Decreases the stakerCount since the miner's stake is being slashed
+                    if(stakes.currentStatus == 4){
+                        TellorTransfer.doTransfer(self,disp.reportedMiner,disp.reportingParty,self.uintVars[keccak256("stakeAmount")]);
+                        stakes.currentStatus =0 ;
                     }
-                    TellorTransfer.doTransfer(self,address(this),last.reportedMiner,self.disputesById[_id].disputeUintVars[keccak256("fee")]);
+                    for(uint i = 0; i < disp.disputeUintVars[keccak256("disputeRounds")];i++){
+                        uint256 _id = disp.disputeUintVars[keccak256(abi.encodePacked(disp.disputeUintVars[keccak256("disputeRounds")]-i))];
+                        if(_id == 0){
+                            _id = origID;
+                        }
+                        TellorStorage.Dispute storage disp2 = self.disputesById[_id];
+                        TellorTransfer.doTransfer(self,address(this),disp2.reportingParty,disp2.disputeUintVars[keccak256("fee")]);
+                    }
                 }
-            }
+                else {
+                    stakes.currentStatus = 1;
+                    TellorStorage.Request storage _request = self.requestDetails[disp.disputeUintVars[keccak256("requestId")]];
+                    if(disp.disputeUintVars[keccak256("minerSlot")] == 2) {
+                        //note we still don't put timestamp back into array (is this an issue? (shouldn't be))
+                      _request.finalValues[disp.disputeUintVars[keccak256("timestamp")]] = disp.disputeUintVars[keccak256("value")];
+                    }
+                    if (_request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] == true) {
+                        _request.inDispute[disp.disputeUintVars[keccak256("timestamp")]] = false;
+                    }
+                    for(uint i = 0; i < disp.disputeUintVars[keccak256("disputeRounds")];i++){
+                        uint256 _id = disp.disputeUintVars[keccak256(abi.encodePacked(disp.disputeUintVars[keccak256("disputeRounds")]-i))];
+                        if(_id != 0){
+                            last = self.disputesById[_id];//handling if happens during an upgrade
+                        }
+                        TellorTransfer.doTransfer(self,address(this),last.reportedMiner,self.disputesById[_id].disputeUintVars[keccak256("fee")]);
+                    }
+                }
+        }  
     }
 
     /**

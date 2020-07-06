@@ -22,39 +22,39 @@ library TellorStake {
     * This function is called by the constructor function on TellorMaster.sol
     */
     function init(TellorStorage.TellorStorageStruct storage self) public {
-        require(self.uintVars[keccak256("decimals")] == 0, "Too many decimals");
-        //Give this contract 6000 Tellor Tributes so that it can stake the initial 6 miners
-        TellorTransfer.updateBalanceAtNow(self.balances[address(this)], 2**256 - 1 - 6000e18);
+        // require(self.uintVars[keccak256("decimals")] == 0, "Too many decimals");
+        // //Give this contract 6000 Tellor Tributes so that it can stake the initial 6 miners
+        // TellorTransfer.updateBalanceAtNow(self.balances[address(this)], 2**256 - 1 - 6000e18);
 
-        // //the initial 5 miner addresses are specfied below
-        // //changed payable[5] to 6
-        address payable[6] memory _initalMiners = [
-            address(0xE037EC8EC9ec423826750853899394dE7F024fee),
-            address(0xcdd8FA31AF8475574B8909F135d510579a8087d3),
-            address(0xb9dD5AfD86547Df817DA2d0Fb89334A6F8eDd891),
-            address(0x230570cD052f40E14C14a81038c6f3aa685d712B),
-            address(0x3233afA02644CCd048587F8ba6e99b3C00A34DcC),
-            address(0xe010aC6e0248790e08F42d5F697160DEDf97E024)
-        ];
-        //Stake each of the 5 miners specified above
-        for (uint256 i = 0; i < 6; i++) {
-            //6th miner to allow for dispute
-            //Miner balance is set at 1000e18 at the block that this function is ran
-            TellorTransfer.updateBalanceAtNow(self.balances[_initalMiners[i]], 1000e18);
+        // // //the initial 5 miner addresses are specfied below
+        // // //changed payable[5] to 6
+        // address payable[6] memory _initalMiners = [
+        //     address(0xE037EC8EC9ec423826750853899394dE7F024fee),
+        //     address(0xcdd8FA31AF8475574B8909F135d510579a8087d3),
+        //     address(0xb9dD5AfD86547Df817DA2d0Fb89334A6F8eDd891),
+        //     address(0x230570cD052f40E14C14a81038c6f3aa685d712B),
+        //     address(0x3233afA02644CCd048587F8ba6e99b3C00A34DcC),
+        //     address(0xe010aC6e0248790e08F42d5F697160DEDf97E024)
+        // ];
+        // //Stake each of the 5 miners specified above
+        // for (uint256 i = 0; i < 6; i++) {
+        //     //6th miner to allow for dispute
+        //     //Miner balance is set at 1000e18 at the block that this function is ran
+        //     TellorTransfer.updateBalanceAtNow(self.balances[_initalMiners[i]], 1000e18);
 
-            newStake(self, _initalMiners[i]);
-        }
+        //     newStake(self, _initalMiners[i]);
+        // }
 
-        //update the total suppply
-        self.uintVars[keccak256("total_supply")] += 6000e18; //6th miner to allow for dispute
-        //set Constants
-        self.uintVars[keccak256("decimals")] = 18;
-        self.uintVars[keccak256("targetMiners")] = 200;
-        self.uintVars[keccak256("stakeAmount")] = 1000e18;
-        self.uintVars[keccak256("disputeFee")] = 970e18;
-        self.uintVars[keccak256("timeTarget")] = 600;
-        self.uintVars[keccak256("timeOfLastNewValue")] = now - (now % self.uintVars[keccak256("timeTarget")]);
-        self.uintVars[keccak256("difficulty")] = 1;
+        // //update the total suppply
+        // self.uintVars[keccak256("total_supply")] += 6000e18; //6th miner to allow for dispute
+        // //set Constants
+        // self.uintVars[keccak256("decimals")] = 18;
+        // self.uintVars[keccak256("targetMiners")] = 200;
+        // self.uintVars[keccak256("stakeAmount")] = 1000e18;
+        // self.uintVars[keccak256("disputeFee")] = 970e18;
+        // self.uintVars[keccak256("timeTarget")] = 600;
+        // self.uintVars[keccak256("timeOfLastNewValue")] = now - (now % self.uintVars[keccak256("timeTarget")]);
+        // self.uintVars[keccak256("difficulty")] = 1;
     }
 
     /**
@@ -62,7 +62,7 @@ library TellorStake {
     * once they lock for withdraw(stakes.currentStatus = 2) they are locked for 7 days before they
     * can withdraw the deposit
     */
-    function requestStakingWithdraw(TellorStorage.TellorStorageStruct storage self) public {
+    function requestStakingWithdraw(TellorStorage.TellorStorageStruct storage self) internal {
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[msg.sender];
         //Require that the miner is staked
         require(stakes.currentStatus == 1, "Miner is not staked");
@@ -85,7 +85,7 @@ library TellorStake {
     /**
     * @dev This function allows users to withdraw their stake after a 7 day waiting period from request
     */
-    function withdrawStake(TellorStorage.TellorStorageStruct storage self) public {
+    function withdrawStake(TellorStorage.TellorStorageStruct storage self) internal {
         TellorStorage.StakeInfo storage stakes = self.stakerDetails[msg.sender];
         //Require the staker has locked for withdraw(currentStatus ==2) and that 7 days have
         //passed by since they locked for withdraw
@@ -98,28 +98,18 @@ library TellorStake {
     /**
     * @dev This function allows miners to deposit their stake.
     */
-    function depositStake(TellorStorage.TellorStorageStruct storage self) public {
-        newStake(self, msg.sender);
-        //self adjusting disputeFee
-        TellorDispute.updateMinDisputeFee(self);
-    }
-
-    /**
-    * @dev This function is used by the init function to succesfully stake the initial 5 miners.
-    * The function updates their status/state and status start date so they are locked it so they can't withdraw
-    * and updates the number of stakers in the system.
-    */
-    function newStake(TellorStorage.TellorStorageStruct storage self, address staker) internal {
-        require(TellorTransfer.balanceOf(self, staker) >= self.uintVars[keccak256("stakeAmount")], "Balance is lower than stake amount");
+    function depositStake(TellorStorage.TellorStorageStruct storage self) internal {
+        require(TellorTransfer.balanceOf(self, msg.sender) >= self.uintVars[keccak256("stakeAmount")], "Balance is lower than stake amount");
         //Ensure they can only stake if they are not currrently staked or if their stake time frame has ended
         //and they are currently locked for witdhraw
-        require(self.stakerDetails[staker].currentStatus == 0 || self.stakerDetails[staker].currentStatus == 2, "Miner is in the wrong state");
+        require(self.stakerDetails[msg.sender].currentStatus == 0 || self.stakerDetails[msg.sender].currentStatus == 2, "Miner is in the wrong state");
         self.uintVars[keccak256("stakerCount")] += 1;
-        self.stakerDetails[staker] = TellorStorage.StakeInfo({
+        self.stakerDetails[msg.sender] = TellorStorage.StakeInfo({
             currentStatus: 1, //this resets their stake start date to today
             startDate: now - (now % 86400)
         });
-        emit NewStake(staker);
+        //self adjusting disputeFee
+        TellorDispute.updateMinDisputeFee(self);
     }
 
     /**

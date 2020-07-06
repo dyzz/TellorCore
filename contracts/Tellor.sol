@@ -1,6 +1,5 @@
 pragma solidity >=0.5.0 <0.7.0;
 
-import "./libraries/SafeMath.sol";
 import "./libraries/TellorStorage.sol";
 import "./libraries/TellorTransfer.sol";
 import "./libraries/TellorDispute.sol";
@@ -14,8 +13,6 @@ import "./libraries/TellorLibrary.sol";
  * and TellorTransfer.sol
  */
 contract Tellor {
-    using SafeMath for uint256;
-
     using TellorDispute for TellorStorage.TellorStorageStruct;
     using TellorLibrary for TellorStorage.TellorStorageStruct;
     using TellorStake for TellorStorage.TellorStorageStruct;
@@ -202,13 +199,13 @@ contract Tellor {
         return tellor.getNewCurrentVariables();
     }
 
-    /**
-    * @dev Getter for the top tipped 5 requests Id's
-    * @return the 5 requestsId
-    */
-    function getTopRequestIDs() external view returns(uint256[5] memory _requestIds){
-        return tellor.getTopRequestIDs();
-    }
+    // /**
+    // * @dev Getter for the top tipped 5 requests Id's
+    // * @return the 5 requestsId
+    // */
+    // function getTopRequestIDs() external view returns(uint256[5] memory _requestIds){
+    //     return tellor.getTopRequestIDs();
+    // }
 
     /**
     * @dev Getter for the 5 requests Id's next in line to get mined
@@ -216,15 +213,6 @@ contract Tellor {
     */
     function getNewVariablesOnDeck() external view returns (uint256[5] memory idsOnDeck, uint256[5] memory tipsOnDeck) {
         return tellor.getNewVariablesOnDeck();
-    }
-
-    /**
-    * @dev Updates the Tellor address after a proposed fork has 
-    * passed the vote and day has gone by without a dispute
-    * @param _disputeId the disputeId for the proposed fork
-    */
-     function updateTellor(uint _disputeId) external{
-        return tellor.updateTellor(_disputeId);
     }
 
     /**

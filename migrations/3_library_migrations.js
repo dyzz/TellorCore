@@ -29,42 +29,42 @@ var OldTellorLibrary = artifacts.require("./oldContracts/libraries/OldTellorLibr
 
 module.exports = async function (deployer) {
 
-    //OLD DEPS
-  await deployer.deploy(OldTellorTransfer);
+  //   //OLD DEPS
+  // await deployer.deploy(OldTellorTransfer);
 
-  //deploy dispute
-  await deployer.link(OldTellorTransfer,OldTellorDispute);
-  await deployer.deploy(OldTellorDispute);
+  // //deploy dispute
+  // await deployer.link(OldTellorTransfer,OldTellorDispute);
+  // await deployer.deploy(OldTellorDispute);
 
-    // deploy stake
-  await deployer.link(OldTellorTransfer,OldTellorStake);
-  await deployer.link(OldTellorDispute,OldTellorStake);
-  await deployer.deploy(OldTellorStake);
+  //   // deploy stake
+  // await deployer.link(OldTellorTransfer,OldTellorStake);
+  // await deployer.link(OldTellorDispute,OldTellorStake);
+  // await deployer.deploy(OldTellorStake);
 
-  // deploy getters lib
-  await deployer.deploy(TellorGettersLibrary);
+  // // deploy getters lib
+  // await deployer.deploy(TellorGettersLibrary);
 
-  // deploy lib
-  await deployer.link(OldTellorDispute, OldTellorLibrary);
-  await deployer.link(OldTellorTransfer, OldTellorLibrary);
-  await deployer.link(OldTellorStake, OldTellorLibrary);
-  await deployer.deploy(OldTellorLibrary);
+  // // deploy lib
+  // await deployer.link(OldTellorDispute, OldTellorLibrary);
+  // await deployer.link(OldTellorTransfer, OldTellorLibrary);
+  // await deployer.link(OldTellorStake, OldTellorLibrary);
+  // await deployer.deploy(OldTellorLibrary);
 
 
-  // deploy tellor
-  await deployer.link(OldTellorTransfer,OldTellor);
-  await deployer.link(OldTellorDispute,OldTellor);
-  await deployer.link(OldTellorStake,OldTellor);
-  await deployer.link(OldTellorLibrary,OldTellor);
-  await deployer.deploy(OldTellor);
+  // // deploy tellor
+  // await deployer.link(OldTellorTransfer,OldTellor);
+  // await deployer.link(OldTellorDispute,OldTellor);
+  // await deployer.link(OldTellorStake,OldTellor);
+  // await deployer.link(OldTellorLibrary,OldTellor);
+  // await deployer.deploy(OldTellor);
 
-  // deploy tellor master
-  await deployer.link(OldTellorTransfer,OldTellorMaster);
-  await deployer.link(TellorGettersLibrary,OldTellorMaster);
-    await deployer.link(OldTellorStake,OldTellorMaster);
-  await deployer.deploy(OldTellor).then(async function() {
-    await deployer.deploy(OldTellorMaster, OldTellor.address)
-  });
+  // // deploy tellor master
+  // await deployer.link(OldTellorTransfer,OldTellorMaster);
+  // await deployer.link(TellorGettersLibrary,OldTellorMaster);
+  //   await deployer.link(OldTellorStake,OldTellorMaster);
+  // await deployer.deploy(OldTellor).then(async function() {
+  //   await deployer.deploy(OldTellorMaster, OldTellor.address)
+  // });
 
 
 };

@@ -13,13 +13,13 @@ module.exports = {
       host: "localhost",
       port: 8545,
       network_id: "*",
-      gas: 10000000, // default ganache-cli value
+      gas: 12000000, // default ganache-cli value
     },
     rinkeby: {
       provider: () =>
-        new HDWalletProvider("3a10b4bc1258e8bfefb95b498fb8c0f0cd6964a811eabca87df5630bcacd7216", `https://rinkeby.infura.io/v3/${accessToken}`),
+        new HDWalletProvider("d13dc98a245bd29193d5b41203a1d3a4ae564257d60e00d6f68d120ef6b796c5", `https://rinkeby.infura.io/v3/${accessToken}`),
       network_id: 4,
-      gas: 4700000,
+      gas: 9500000,
       gasPrice: 8000000000,
     },
     mainnet: {
