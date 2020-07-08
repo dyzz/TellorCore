@@ -22,7 +22,7 @@ library TellorTransfer {
     * @param _amount The amount of tokens to send
     * @return true if transfer is successful
     */
-    function transfer(TellorStorage.TellorStorageStruct storage self, address _to, uint256 _amount) public returns (bool success) {
+    function transfer(TellorStorage.TellorStorageStruct storage self, address _to, uint256 _amount) internal returns (bool success) {
         doTransfer(self, msg.sender, _to, _amount);
         return true;
     }
@@ -63,7 +63,7 @@ library TellorTransfer {
     * @param _spender address of spender of parties said balance
     * @return Returns the remaining allowance of tokens granted to the _spender from the _user
     */
-    function allowance(TellorStorage.TellorStorageStruct storage self, address _user, address _spender) internal view returns (uint256) {
+    function allowance(TellorStorage.TellorStorageStruct storage self, address _user, address _spender) public view returns (uint256) {
         return self.allowed[_user][_spender];
     }
 

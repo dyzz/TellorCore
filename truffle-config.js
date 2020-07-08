@@ -19,7 +19,11 @@ module.exports = {
       provider: () =>
         new HDWalletProvider("d13dc98a245bd29193d5b41203a1d3a4ae564257d60e00d6f68d120ef6b796c5", `https://rinkeby.infura.io/v3/${accessToken}`),
       network_id: 4,
+<<<<<<< HEAD
       gas: 9500000,
+=======
+      gas: 10000000,
+>>>>>>> da9d237c1bf735a52cc5375a7334aab309e4fdfe
       gasPrice: 8000000000,
     },
     mainnet: {

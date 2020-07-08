@@ -42,9 +42,6 @@ library TellorDispute {
         //provided by the party initiating the dispute
         address _miner = _request.minersByValue[_timestamp][_minerIndex];
         bytes32 _hash = keccak256(abi.encodePacked(_miner, _requestId, _timestamp));
-
-
-
         //Increase the dispute count by 1
 
         self.uintVars[keccak256("disputeCount")] = self.uintVars[keccak256("disputeCount")] + 1;
@@ -227,7 +224,7 @@ library TellorDispute {
     * @dev Allows disputer to unlock the dispute fee
     * @param _disputeId to unlock fee from
     */
-    function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) internal {
+    function unlockDisputeFee (TellorStorage.TellorStorageStruct storage self, uint _disputeId) public {
         bytes32 _hash = self.disputesById[_disputeId].hash;
         uint256 origID = self.disputeIdByDisputeHash[_hash];
         uint256 lastID =  self.disputesById[origID].disputeUintVars[keccak256(abi.encodePacked(self.disputesById[origID].disputeUintVars[keccak256("disputeRounds")]))];
